@@ -31,11 +31,18 @@ def get_all_files():
 
 def commit_and_push(filename):
     try:
+        # Set Git identity (needed on Render)
+        subprocess.run(["git", "config", "user.email", "elysiad-bot@render.com"], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "config", "user.name", "Elysiad Bot"], cwd=REPO_PATH, check=True)
+
+        # Add, commit, and push
         subprocess.run(["git", "add", filename], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "commit", "-m", f"Auto-update {filename}"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "push", "origin", "main"], cwd=REPO_PATH, check=True)
+
         print(f"[GIT] Successfully pushed {filename} to GitHub.")
         return True
+
     except subprocess.CalledProcessError as e:
         print(f"[GIT ERROR] {e}")
         return False
