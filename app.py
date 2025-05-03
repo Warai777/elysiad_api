@@ -1,5 +1,6 @@
 import os
 import git
+import ast
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -46,7 +47,6 @@ def search_files():
     term = request.args.get("term")
     if not term:
         return jsonify({"error": "Missing search term"}), 400
-
     results = []
     for root, _, files in os.walk(REPO_PATH):
         for file in files:
@@ -61,14 +61,56 @@ def search_files():
                                 "line": i,
                                 "text": line.strip()
                             })
-            except Exception as e:
-                continue  # skip unreadable files (e.g., binaries)
-
+            except Exception:
+                continue
     return jsonify(results)
 
+@app.route("/routes", methods=["GET"])
+def list_routes():
+    output = []
+    for rule in app.url_map.iter_rules():
+        methods = list(rule.methods - {"HEAD", "OPTIONS"})
+        if rule.endpoint != "static":
+            output.append({
+                "route": str(rule),
+                "methods": methods,
+                "function": rule.endpoint
+            })
+    return jsonify(output)
+
+@app.route("/functions_index", methods=["GET"])
+def index_functions():
+    summary = []
+    for root, _, files in os.walk(REPO_PATH):
+        for file in files:
+            if not file.endswith(".py"):
+                continue
+            file_path = os.path.join(root, file)
+            rel_path = os.path.relpath(file_path, REPO_PATH).replace("\\", "/")
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    tree = ast.parse(f.read(), filename=rel_path)
+                    for node in ast.walk(tree):
+                        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                            summary.append({
+                                "path": rel_path,
+                                "type": "function" if isinstance(node, ast.FunctionDef) else "class",
+                                "name": node.name,
+                                "line": node.lineno
+                            })
+            except Exception:
+                continue
+    return jsonify(summary)
+
+@app.route("/file_tree_index", methods=["GET"])
+def file_tree():
+    tree = {}
+    for root, _, files in os.walk(REPO_PATH):
+        rel_root = os.path.relpath(root, REPO_PATH).replace("\\", "/")
+        rel_root = "." if rel_root == "." else rel_root
+        tree.setdefault(rel_root, []).extend(files)
+    return jsonify(tree)
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
