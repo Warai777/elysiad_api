@@ -39,7 +39,7 @@ def get_file():
         return jsonify({"error": "File not found"}), 404
     with open(full_path, "r", encoding="utf-8") as f:
         content = f.read()
-    return jsonify({"path": path, "content": content})
+    return content, 200, {'Content-Type': 'text/plain'}
 
 if __name__ == "__main__":
     import os
