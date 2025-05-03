@@ -1,11 +1,15 @@
 import os
 import git
 import ast
+import subprocess
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-REPO_URL = "https://github.com/Warai777/Elysiad_Bot.git"
+GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+
+REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/Warai777/Elysiad_Bot.git"
 REPO_PATH = "elysiad_local"
 
 def update_repo():
@@ -24,6 +28,17 @@ def get_all_files():
             rel_path = os.path.relpath(full_path, REPO_PATH).replace("\\", "/")
             file_list.append(rel_path)
     return file_list
+
+def commit_and_push(filename):
+    try:
+        subprocess.run(["git", "add", filename], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "commit", "-m", f"Auto-update {filename}"], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "push", "origin", "main"], cwd=REPO_PATH, check=True)
+        print(f"[GIT] Successfully pushed {filename} to GitHub.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"[GIT ERROR] {e}")
+        return False
 
 @app.route("/repo_tree", methods=["GET"])
 def repo_tree():
