@@ -41,6 +41,32 @@ def get_file():
         content = f.read()
     return content, 200, {'Content-Type': 'text/plain'}
 
+@app.route("/search", methods=["GET"])
+def search_files():
+    term = request.args.get("term")
+    if not term:
+        return jsonify({"error": "Missing search term"}), 400
+
+    results = []
+    for root, _, files in os.walk(REPO_PATH):
+        for file in files:
+            file_path = os.path.join(root, file)
+            rel_path = os.path.relpath(file_path, REPO_PATH).replace("\\", "/")
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for i, line in enumerate(f, 1):
+                        if term in line:
+                            results.append({
+                                "path": rel_path,
+                                "line": i,
+                                "text": line.strip()
+                            })
+            except Exception as e:
+                continue  # skip unreadable files (e.g., binaries)
+
+    return jsonify(results)
+
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
