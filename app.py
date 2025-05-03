@@ -142,12 +142,12 @@ def update_file():
 
     try:
         with open(full_path, "w", encoding="utf-8") as f:
-    f.write(new_content)
-
-if commit_and_push(path):
-    return jsonify({"message": f"✅ File '{path}' updated and pushed to GitHub"}), 200
-else:
-    return jsonify({"error": "File saved but Git push failed"}), 500
+            f.write(new_content)
+ 
+        if commit_and_push(path):
+            return jsonify({"message": f"✅ File '{path}' updated and pushed to GitHub"}), 200
+        else:
+            return jsonify({"error": "File saved but Git push failed"}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
