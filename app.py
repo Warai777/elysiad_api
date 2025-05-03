@@ -111,6 +111,28 @@ def file_tree():
         tree.setdefault(rel_root, []).extend(files)
     return jsonify(tree)
 
+@app.route("/update_file", methods=["POST"])
+def update_file():
+    data = request.get_json()
+    path = data.get("path")
+    new_content = data.get("content")
+
+    if not path or new_content is None:
+        return jsonify({"error": "Missing 'path' or 'content'"}), 400
+
+    full_path = os.path.join(REPO_PATH, path)
+
+    if not os.path.isfile(full_path):
+        return jsonify({"error": f"File {path} not found"}), 404
+
+    try:
+        with open(full_path, "w", encoding="utf-8") as f:
+            f.write(new_content)
+        return jsonify({"message": f"✅ File '{path}' updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
