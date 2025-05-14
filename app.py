@@ -8,7 +8,6 @@ app = Flask(__name__)
 
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-
 REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/Warai777/Elysiad_Bot.git"
 REPO_PATH = "elysiad_local"
 
@@ -35,13 +34,16 @@ def get_all_files():
 
 def commit_and_push(filename):
     try:
-        # Set Git identity (needed on Render)
+        # Set Git identity
         subprocess.run(["git", "config", "user.email", "elysiad-bot@render.com"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "config", "user.name", "Elysiad Bot"], cwd=REPO_PATH, check=True)
 
-        # Reconnect origin in case it's missing
+        # Ensure origin is set
         subprocess.run(["git", "remote", "remove", "origin"], cwd=REPO_PATH, check=False)
         subprocess.run(["git", "remote", "add", "origin", REPO_URL], cwd=REPO_PATH, check=True)
+
+        # Pull remote changes to prevent non-fast-forward push errors
+        subprocess.run(["git", "pull", "origin", "main", "--rebase"], cwd=REPO_PATH, check=True)
 
         # Add, commit, and push
         subprocess.run(["git", "add", filename], cwd=REPO_PATH, check=True)
@@ -50,6 +52,7 @@ def commit_and_push(filename):
 
         print(f"[GIT] Successfully pushed {filename} to GitHub.")
         return True
+
 
     except subprocess.CalledProcessError as e:
         print(f"[GIT ERROR] {e}")
