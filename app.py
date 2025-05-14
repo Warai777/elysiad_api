@@ -159,6 +159,25 @@ def update_file():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/createFile', methods=['POST'])
+def create_file():
+    data = request.json
+    path = data.get('path')
+    content = data.get('content', '')
+
+    if not path:
+        return jsonify({"error": "Path is required"}), 400
+
+    full_path = os.path.join(BASE_REPO_PATH, path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+
+    try:
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        return jsonify({"message": f"File '{path}' created."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
