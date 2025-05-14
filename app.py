@@ -13,12 +13,16 @@ REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/Warai777/Elysia
 REPO_PATH = "elysiad_local"
 
 def update_repo():
-    if not os.path.exists(REPO_PATH):
+    if not os.path.exists(REPO_PATH) or not os.path.isdir(os.path.join(REPO_PATH, ".git")):
+        if os.path.exists(REPO_PATH):
+            import shutil
+            shutil.rmtree(REPO_PATH)
         git.Repo.clone_from(REPO_URL, REPO_PATH)
     else:
         repo = git.Repo(REPO_PATH)
         origin = repo.remotes.origin
         origin.pull()
+
 
 def get_all_files():
     file_list = []
