@@ -18,9 +18,14 @@ def update_repo():
             shutil.rmtree(REPO_PATH)
         git.Repo.clone_from(REPO_URL, REPO_PATH)
     else:
-        repo = git.Repo(REPO_PATH)
-        origin = repo.remotes.origin
-        origin.pull()
+        try:
+            subprocess.run(["git", "stash"], cwd=REPO_PATH, check=False)
+            subprocess.run(["git", "remote", "remove", "origin"], cwd=REPO_PATH, check=False)
+            subprocess.run(["git", "remote", "add", "origin", REPO_URL], cwd=REPO_PATH, check=True)
+            subprocess.run(["git", "pull", "origin", "main", "--rebase"], cwd=REPO_PATH, check=True)
+            subprocess.run(["git", "stash", "pop"], cwd=REPO_PATH, check=False)
+        except subprocess.CalledProcessError as e:
+            print(f"[GIT PULL ERROR] {e}")
 
 
 def get_all_files():
