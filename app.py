@@ -35,10 +35,14 @@ def commit_and_push(filename):
         subprocess.run(["git", "config", "user.email", "elysiad-bot@render.com"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "config", "user.name", "Elysiad Bot"], cwd=REPO_PATH, check=True)
 
+        # Reconnect origin in case it's missing
+        subprocess.run(["git", "remote", "remove", "origin"], cwd=REPO_PATH, check=False)
+        subprocess.run(["git", "remote", "add", "origin", REPO_URL], cwd=REPO_PATH, check=True)
+
         # Add, commit, and push
         subprocess.run(["git", "add", filename], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "commit", "-m", f"Auto-update {filename}"], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "push", "origin", "main"], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "push", "-u", "origin", "main"], cwd=REPO_PATH, check=True)
 
         print(f"[GIT] Successfully pushed {filename} to GitHub.")
         return True
@@ -46,6 +50,7 @@ def commit_and_push(filename):
     except subprocess.CalledProcessError as e:
         print(f"[GIT ERROR] {e}")
         return False
+
 
 @app.route("/repo_tree", methods=["GET"])
 def repo_tree():
