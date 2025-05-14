@@ -42,8 +42,14 @@ def commit_and_push(filename):
         subprocess.run(["git", "remote", "remove", "origin"], cwd=REPO_PATH, check=False)
         subprocess.run(["git", "remote", "add", "origin", REPO_URL], cwd=REPO_PATH, check=True)
 
-        # Pull remote changes to prevent non-fast-forward push errors
+        # Stash any unstaged or staged changes
+        subprocess.run(["git", "stash"], cwd=REPO_PATH, check=True)
+
+        # Pull latest with rebase
         subprocess.run(["git", "pull", "origin", "main", "--rebase"], cwd=REPO_PATH, check=True)
+
+        # Reapply stash (if any)
+        subprocess.run(["git", "stash", "pop"], cwd=REPO_PATH, check=False)
 
         # Add, commit, and push
         subprocess.run(["git", "add", filename], cwd=REPO_PATH, check=True)
@@ -53,10 +59,10 @@ def commit_and_push(filename):
         print(f"[GIT] Successfully pushed {filename} to GitHub.")
         return True
 
-
     except subprocess.CalledProcessError as e:
         print(f"[GIT ERROR] {e}")
         return False
+
 
 
 @app.route("/repo_tree", methods=["GET"])
