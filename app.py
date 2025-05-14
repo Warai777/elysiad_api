@@ -168,15 +168,21 @@ def create_file():
     if not path:
         return jsonify({"error": "Path is required"}), 400
 
-    full_path = os.path.join(BASE_REPO_PATH, path)
+    full_path = os.path.join(REPO_PATH, path)
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
     try:
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
-        return jsonify({"message": f"File '{path}' created."})
+
+        if commit_and_push(path):
+            return jsonify({"message": f"✅ File '{path}' created and pushed to GitHub"}), 200
+        else:
+            return jsonify({"error": "File created but Git push failed"}), 500
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":
