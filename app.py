@@ -1,6 +1,7 @@
 import os
 import git
 import ast
+import traceback
 import subprocess
 from flask import Flask, request, jsonify
 
@@ -66,7 +67,16 @@ def commit_and_push(filename):
         return True
 
     except subprocess.CalledProcessError as e:
-        print(f"[GIT ERROR] {e}")
+        print(f"[GIT ERROR] Command failed: {e.cmd}")
+        print(f"[GIT ERROR] Exit code: {e.returncode}")
+        print(f"[GIT ERROR] Output: {e.output}")
+        print(f"[GIT ERROR] Error: {e.stderr}")
+        traceback.print_exc()
+        return False
+
+    except Exception as e:
+        print("[GIT ERROR] Unexpected exception:")
+        traceback.print_exc()
         return False
 
 
