@@ -57,7 +57,7 @@ def commit_and_push(filename):
 
         run_git(["git", "stash"], REPO_PATH)
         run_git(["git", "pull", "origin", "main", "--rebase"], REPO_PATH)
-        run_git(["git", "stash", "pop"], REPO_PATH)
+        subprocess.run(["git", "stash", "pop"], cwd=REPO_PATH, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         run_git(["git", "add", filename], REPO_PATH)
         run_git(["git", "commit", "-m", f"Auto-update {filename}"], REPO_PATH)
