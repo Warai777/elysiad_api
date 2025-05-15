@@ -37,31 +37,32 @@ def get_all_files():
             file_list.append(rel_path)
     return file_list
 
+def run_git(command, cwd):
+    print(f"[GIT] Running: {' '.join(command)}")
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+    print(f"[GIT OUT] {result.stdout}")
+    print(f"[GIT ERR] {result.stderr}")
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(result.returncode, command)
+    return result
+
 def commit_and_push(filename):
     try:
-        # Set Git identity
-        subprocess.run(["git", "config", "user.email", "elysiad-bot@render.com"], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "config", "user.name", "Elysiad Bot"], cwd=REPO_PATH, check=True)
+        run_git(["git", "config", "user.email", "elysiad-bot@render.com"], REPO_PATH)
+        run_git(["git", "config", "user.name", "Elysiad Bot"], REPO_PATH)
 
-        # Ensure origin is set
-        subprocess.run(["git", "remote", "remove", "origin"], cwd=REPO_PATH, check=False)
-        subprocess.run(["git", "remote", "add", "origin", REPO_URL], cwd=REPO_PATH, check=True)
+        run_git(["git", "remote", "remove", "origin"], REPO_PATH)
+        run_git(["git", "remote", "add", "origin", REPO_URL], REPO_PATH)
 
-        # Stash any unstaged or staged changes
-        subprocess.run(["git", "stash"], cwd=REPO_PATH, check=True)
+        run_git(["git", "stash"], REPO_PATH)
+        run_git(["git", "pull", "origin", "main", "--rebase"], REPO_PATH)
+        run_git(["git", "stash", "pop"], REPO_PATH)
 
-        # Pull latest with rebase
-        subprocess.run(["git", "pull", "origin", "main", "--rebase"], cwd=REPO_PATH, check=True)
+        run_git(["git", "add", filename], REPO_PATH)
+        run_git(["git", "commit", "-m", f"Auto-update {filename}"], REPO_PATH)
+        run_git(["git", "push", "-u", "origin", "main"], REPO_PATH)
 
-        # Reapply stash (if any)
-        subprocess.run(["git", "stash", "pop"], cwd=REPO_PATH, check=False)
-
-        # Add, commit, and push
-        subprocess.run(["git", "add", filename], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "commit", "-m", f"Auto-update {filename}"], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "push", "-u", "origin", "main"], cwd=REPO_PATH, check=True)
-
-        print(f"[GIT] Successfully pushed {filename} to GitHub.")
+        print(f"[GIT] Successfully pushed {filename}")
         return True
 
     except subprocess.CalledProcessError as e:
