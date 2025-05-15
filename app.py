@@ -44,7 +44,7 @@ def run_git(command, cwd):
     print(f"[GIT OUT] {result.stdout}")
     print(f"[GIT ERR] {result.stderr}")
     if result.returncode != 0:
-        raise subprocess.CalledProcessError(result.returncode, command)
+        raise subprocess.CalledProcessError(result.returncode, command, result.stdout + result.stderr)
     return result
 
 def commit_and_push(filename):
@@ -67,15 +67,13 @@ def commit_and_push(filename):
         return True
 
     except subprocess.CalledProcessError as e:
-        print(f"[GIT ERROR] Command failed: {e.cmd}")
-        print(f"[GIT ERROR] Exit code: {e.returncode}")
-        print(f"[GIT ERROR] Output: {e.output}")
-        print(f"[GIT ERROR] Error: {e.stderr}")
+        print(f"[GIT ERROR] Command failed: {' '.join(e.cmd)}")
+        print(f"[GIT ERROR] Output:\n{e.output}")
         traceback.print_exc()
         return False
 
-    except Exception as e:
-        print("[GIT ERROR] Unexpected exception:")
+    except Exception:
+        print("[GIT ERROR] Unexpected error:")
         traceback.print_exc()
         return False
 
