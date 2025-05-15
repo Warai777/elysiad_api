@@ -52,7 +52,7 @@ def commit_and_push(filename):
         run_git(["git", "config", "user.email", "elysiad-bot@render.com"], REPO_PATH)
         run_git(["git", "config", "user.name", "Elysiad Bot"], REPO_PATH)
 
-        run_git(["git", "remote", "remove", "origin"], REPO_PATH)
+        subprocess.run(["git", "remote", "remove", "origin"], cwd=REPO_PATH, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         run_git(["git", "remote", "add", "origin", REPO_URL], REPO_PATH)
 
         run_git(["git", "stash"], REPO_PATH)
